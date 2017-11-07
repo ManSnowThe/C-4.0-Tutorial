@@ -1,0 +1,73 @@
+﻿// Продемонстрировать влияние приоритетов потоков.
+using System;
+using System.Threading;
+
+namespace ca2
+{
+    class MyThread
+    {
+        public int Count;
+        public Thread Thrd;
+
+        static bool stop = false;
+        static string currentName;
+
+        /* Сконструировать новый поток. Обратите внимание на то, что         * данный конструктор еще не начинает выполнение потоков. */         public MyThread(string name)
+        {
+            Count = 0;
+            Thrd = new Thread(this.Run);
+            Thrd.Name = name;
+            currentName = name;
+        }
+        // Начать выполнение нового потока.
+        void Run()
+        {
+            Console.WriteLine("Поток " + Thrd.Name + " начат.");
+            do
+            {
+                Count++;
+                if (currentName != Thrd.Name)
+                {
+                    currentName = Thrd.Name;
+                    Console.WriteLine("В потоке " + currentName);
+                }
+            } while (stop == false && Count < 1000000000);
+            stop = true;
+
+            Console.WriteLine("Поток " + Thrd.Name + " завершен.");
+        }
+    }
+    class PriorityDemo
+    {
+        static void Main()
+        {
+            MyThread mt1 = new MyThread("с высоким приоритетом");
+            MyThread mt2 = new MyThread("с низким приоритетом");
+
+            // Установить приоритеты для потоков.
+            mt1.Thrd.Priority = ThreadPriority.AboveNormal;
+            mt2.Thrd.Priority = ThreadPriority.BelowNormal;
+
+            DateTime start = DateTime.Now;
+
+            // Начать потоки
+            mt1.Thrd.Start();
+            mt2.Thrd.Start();
+
+            mt1.Thrd.Join();
+            mt2.Thrd.Join();
+
+            Console.WriteLine();
+
+            Console.WriteLine("Поток " + mt1.Thrd.Name + " досчитал до " + mt1.Count);
+            Console.WriteLine("Поток " + mt2.Thrd.Name + " досчитал до " + mt2.Count);
+
+            DateTime end = DateTime.Now;
+            TimeSpan result = end - start;
+
+            Console.WriteLine();
+
+            Console.WriteLine("Время выполнения: {0:c}", result);
+        }
+    }
+}
